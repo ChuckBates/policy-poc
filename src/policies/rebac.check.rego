@@ -19,8 +19,8 @@ default allow := false
 # Change test
 #
 allow if {
-	input.requestType = "evaluate"
-	input.action in user_permissions
+	input.resource.requestType = "evaluate"
+	input.resource.action in user_permissions
 	location_is_valid
 	product_type_is_valid
 	company_party_is_valid
@@ -28,17 +28,17 @@ allow if {
 }
 
 allow if {
-	input.requestType = "generate_query"
-	input.action in permission_sets["nominations"]
-	input.action in user_permissions
+	input.resource.requestType = "generate_query"
+	input.resource.action in permission_sets["nominations"]
+	input.resource.action in user_permissions
 	pss_right_is_valid
 	allowedNominations[x]
 }
 
 allow  if {
-	input.requestType = "generate_query"
-	input.action in permission_sets["tickets"]
-	input.action in user_permissions
+	input.resource.requestType = "generate_query"
+	input.resource.action in permission_sets["tickets"]
+	input.resource.action in user_permissions
 	pss_right_is_valid
 	allowedTickets[x]
 }
@@ -60,7 +60,7 @@ allowedTickets[x] if {
 #
 # Policy rules and variables
 #
-principal := principals[input.principal]
+principal := principals[input.resource.principal]
 
 user_permissions contains permission if {
 	some inherited_permission in inherited_permissions
@@ -69,14 +69,14 @@ user_permissions contains permission if {
 }
 
 subscriber_permissions contains subscriber_permission if {
-    some subscriber in input.context.subscribers
+    some subscriber in input.resource.context.subscribers
 	some subscriber_permission in subscribers[subscriber].permissions
 }
 
 inherited_permissions contains permission if {
 	some permission in principal.permissions
-	permission.subscriber in input.context.subscribers
-	permission.company in input.context.companies
+	permission.subscriber in input.resource.context.subscribers
+	permission.company in input.resource.context.companies
 }
 
 inherited_companies contains company if {
@@ -92,7 +92,7 @@ inherited_subscribers contains subscriber if {
 inherited_product_types contains productType if {
 	some permission in inherited_permissions
 	some company_permission in companies[permission.company].permissions
-    some subscriber in input.context.subscribers
+    some subscriber in input.resource.context.subscribers
 	company_permission.subscriber = subscriber
 	some productType in company_permission.productTypes
 }
@@ -100,31 +100,31 @@ inherited_product_types contains productType if {
 inherited_locations contains location if {
 	some permission in inherited_permissions
 	some company_permission in companies[permission.company].permissions
-    some subscriber in input.context.subscribers
+    some subscriber in input.resource.context.subscribers
 	company_permission.subscriber = subscriber
 	some location in company_permission.locations
 }
 
 # Double policy variable assignment is Rego's way of doing a logical OR
-pss_right_is_valid if permissions[input.action].pss_right == ""
-pss_right_is_valid if permissions[input.action].pss_right in principal.pss_rights
+pss_right_is_valid if permissions[input.resource.action].pss_right == ""
+pss_right_is_valid if permissions[input.resource.action].pss_right in principal.pss_rights
 
-required_company_party := permissions[input.action].companyParty
+required_company_party := permissions[input.resource.action].companyParty
 company_party_is_valid if required_company_party == "*"
 company_party_is_valid if {
-    required_company_party == input.context.companyParties[i]
-    input.context.companies[i] in inherited_companies
+    required_company_party == input.resource.context.companyParties[i]
+    input.resource.context.companies[i] in inherited_companies
 }
 
 location_is_valid if "*" in inherited_locations
 location_is_valid if {
-	some location in input.context.locations
+	some location in input.resource.context.locations
     location in inherited_locations
 }
 
 product_type_is_valid if "*" in inherited_product_types
 product_type_is_valid if {
-	some productType in input.context.productTypes
+	some productType in input.resource.context.productTypes
     productType in inherited_product_types
 }
 
