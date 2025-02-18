@@ -16,6 +16,7 @@ default allow := false
 
 #
 # Policy enforcement
+# Change test
 #
 allow if {
 	input.requestType = "evaluate"
