@@ -69,14 +69,14 @@ user_permissions contains permission if {
 }
 
 subscriber_permissions contains subscriber_permission if {
-    some subscriber in input.resource.context.subscribers
+    some subscriber in input.resource.subscribers
 	some subscriber_permission in subscribers[subscriber].permissions
 }
 
 inherited_permissions contains permission if {
 	some permission in principal.permissions
-	permission.subscriber in input.resource.context.subscribers
-	permission.company in input.resource.context.companies
+	permission.subscriber in input.resource.subscribers
+	permission.company in input.resource.companies
 }
 
 inherited_companies contains company if {
@@ -92,7 +92,7 @@ inherited_subscribers contains subscriber if {
 inherited_product_types contains productType if {
 	some permission in inherited_permissions
 	some company_permission in companies[permission.company].permissions
-    some subscriber in input.resource.context.subscribers
+    some subscriber in input.resource.subscribers
 	company_permission.subscriber = subscriber
 	some productType in company_permission.productTypes
 }
@@ -100,7 +100,7 @@ inherited_product_types contains productType if {
 inherited_locations contains location if {
 	some permission in inherited_permissions
 	some company_permission in companies[permission.company].permissions
-    some subscriber in input.resource.context.subscribers
+    some subscriber in input.resource.subscribers
 	company_permission.subscriber = subscriber
 	some location in company_permission.locations
 }
@@ -112,19 +112,19 @@ pss_right_is_valid if permissions[input.resource.action].pss_right in principal.
 required_company_party := permissions[input.resource.action].companyParty
 company_party_is_valid if required_company_party == "*"
 company_party_is_valid if {
-    required_company_party == input.resource.context.companyParties[i]
-    input.resource.context.companies[i] in inherited_companies
+    required_company_party == input.resource.companyParties[i]
+    input.resource.companies[i] in inherited_companies
 }
 
 location_is_valid if "*" in inherited_locations
 location_is_valid if {
-	some location in input.resource.context.locations
+	some location in input.resource.locations
     location in inherited_locations
 }
 
 product_type_is_valid if "*" in inherited_product_types
 product_type_is_valid if {
-	some productType in input.resource.context.productTypes
+	some productType in input.resource.productTypes
     productType in inherited_product_types
 }
 
