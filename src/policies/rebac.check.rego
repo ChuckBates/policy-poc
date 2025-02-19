@@ -16,7 +16,6 @@ default allow := false
 
 #
 # Policy enforcement
-# Change test
 #
 allow if {
 	input.resource.requestType = "evaluate"
