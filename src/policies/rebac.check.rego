@@ -77,7 +77,12 @@ principal := ds.object({
 
 user_permissions contains permission if {
 	some inherited_permission in inherited_permissions
-	some permission in permissions_by_role[inherited_permission.role].valid_actions ##
+    role := ds.object({
+        "object_type": "role",
+        "object_id": inherited_permission.role,
+        "with_relation": true
+    })
+	some permission in role.actions
 	permission in subscriber_permissions
 }
 
