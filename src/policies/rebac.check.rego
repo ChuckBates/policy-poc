@@ -70,7 +70,7 @@ allowedTickets[x] if {
 # Policy rules and variables
 #
 principal := ds.object({
-    "object_type": "principal",
+    "object_type": "user",
     "object_id": input.resource.principal,
     "with_relation": true
 })
