@@ -18,11 +18,8 @@ default allow := false
 # Policy enforcement
 #
 allow if {
-    print("finde me")
-    print("requestType: ", input.resource.requestType)
 	input.resource.requestType = "evaluate"
-    # print("action: ", input.resource.action)
-	# input.resource.action in user_permissions
+	input.resource.action in user_permissions
     # print("location_is_valid: ", location_is_valid)
 	# location_is_valid
     # print("product_type_is_valid: ", product_type_is_valid)
@@ -76,38 +73,38 @@ allow if {
 # #
 # # Policy rules and variables
 # #
-# principal := ds.object({
-#     "object_type": "user",
-#     "object_id": input.resource.principal,
-#     "with_relation": true
-# })
+principal := ds.object({
+    "object_type": "user",
+    "object_id": input.resource.principal,
+    "with_relation": true
+})
 
-# user_permissions contains permission if {
-# 	some inherited_permission in inherited_permissions
-#     role := ds.object({
-#         "object_type": "role",
-#         "object_id": inherited_permission.role,
-#         "with_relation": true
-#     })
-# 	some permission in role.actions
-# 	permission in subscriber_permissions
-# }
+user_permissions contains permission if {
+	some inherited_permission in inherited_permissions
+    role := ds.object({
+        "object_type": "role",
+        "object_id": inherited_permission.role,
+        "with_relation": true
+    })
+	some permission in role.actions
+	permission in subscriber_permissions
+}
 
-# subscriber_permissions contains subscriber_permission if {
-#     some input_subscriber in input.resource.subscribers
-#     subscriber := ds.object({
-#         "object_type": "subscriber",
-#         "object_id": input_subscriber,
-#         "with_relation": true
-#     })
-# 	some subscriber_permission in subscriber.permissions
-# }
+subscriber_permissions contains subscriber_permission if {
+    some input_subscriber in input.resource.subscribers
+    subscriber := ds.object({
+        "object_type": "subscriber",
+        "object_id": input_subscriber,
+        "with_relation": true
+    })
+	some subscriber_permission in subscriber.permissions
+}
 
-# inherited_permissions contains permission if {
-# 	some permission in principal.user_permissions
-# 	permission.subscriber in input.resource.subscribers
-# 	permission.company in input.resource.companies
-# }
+inherited_permissions contains permission if {
+	some permission in principal.user_permissions
+	permission.subscriber in input.resource.subscribers
+	permission.company in input.resource.companies
+}
 
 # inherited_companies contains company if {
 # 	some permission in inherited_permissions
