@@ -18,11 +18,17 @@ default allow := false
 # Policy enforcement
 #
 allow if {
+    print("requestType: ", input.resource.requestType)
 	input.resource.requestType = "evaluate"
+    print("action: ", input.resource.action)
 	input.resource.action in user_permissions
+    print("location_is_valid: ", location_is_valid)
 	location_is_valid
+    print("product_type_is_valid: ", product_type_is_valid)
 	product_type_is_valid
+    print("company_party_is_valid: ", company_party_is_valid)
 	company_party_is_valid
+    print("pss_right_is_valid: ", pss_right_is_valid)
 	pss_right_is_valid
 }
 
