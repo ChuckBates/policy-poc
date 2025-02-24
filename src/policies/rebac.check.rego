@@ -26,18 +26,28 @@ allow if {
 	pss_right_is_valid
 }
 
+nomination_action_set := ds.object({
+    "object_type": "action_set",
+    "object_id": "nominations"
+})
+
+ticket_action_set := ds.object({
+    "object_type": "action_set",
+    "object_id": "tickets"
+})
+
 allow if {
 	input.resource.requestType = "generate_query"
-	input.resource.action in permission_sets["nominations"]
-	input.resource.action in user_permissions
+	input.resource.action in nomination_action_set
+	input.resource.action in user_permissions 
 	pss_right_is_valid
 	allowedNominations[x]
 }
 
 allow  if {
 	input.resource.requestType = "generate_query"
-	input.resource.action in permission_sets["tickets"]
-	input.resource.action in user_permissions
+	input.resource.action in ticket_action_set
+	input.resource.action in user_permissions 
 	pss_right_is_valid
 	allowedTickets[x]
 }
@@ -59,21 +69,30 @@ allowedTickets[x] if {
 #
 # Policy rules and variables
 #
-principal := principals[input.resource.principal]
+principal := ds.object({
+    "object_type": "principal",
+    "object_id": input.resource.principal,
+    "with_relation": true
+})
 
 user_permissions contains permission if {
 	some inherited_permission in inherited_permissions
-	some permission in permissions_by_role[inherited_permission.role].valid_actions
+	some permission in permissions_by_role[inherited_permission.role].valid_actions ##
 	permission in subscriber_permissions
 }
 
 subscriber_permissions contains subscriber_permission if {
-    some subscriber in input.resource.subscribers
-	some subscriber_permission in subscribers[subscriber].permissions
+    some input_subscriber in input.resource.subscribers
+    subscriber := ds.object({
+        "object_type": "subscriber",
+        "object_id": input_subscriber,
+        "with_relation": true
+    })
+	some subscriber_permission in subscriber.permissions
 }
 
 inherited_permissions contains permission if {
-	some permission in principal.permissions
+	some permission in principal.user_permissions
 	permission.subscriber in input.resource.subscribers
 	permission.company in input.resource.companies
 }
@@ -90,7 +109,12 @@ inherited_subscribers contains subscriber if {
 
 inherited_product_types contains productType if {
 	some permission in inherited_permissions
-	some company_permission in companies[permission.company].permissions
+    company := ds.object({
+        "object_type": "company",
+        "object_id": permission.company,
+        "with_relation": true
+    })
+	some company_permission in company.company_permissions
     some subscriber in input.resource.subscribers
 	company_permission.subscriber = subscriber
 	some productType in company_permission.productTypes
@@ -98,17 +122,28 @@ inherited_product_types contains productType if {
 
 inherited_locations contains location if {
 	some permission in inherited_permissions
-	some company_permission in companies[permission.company].permissions
+    company := ds.object({
+        "object_type": "company",
+        "object_id": permission.company,
+        "with_relation": true
+    })
+	some company_permission in company.company_permissions
     some subscriber in input.resource.subscribers
 	company_permission.subscriber = subscriber
 	some location in company_permission.locations
 }
 
-# Double policy variable assignment is Rego's way of doing a logical OR
-pss_right_is_valid if permissions[input.resource.action].pss_right == ""
-pss_right_is_valid if permissions[input.resource.action].pss_right in principal.pss_rights
+action := ds.object({
+    "object_type": "action",
+    "object_id": input.resource.action,
+    "with_relation": true
+})
 
-required_company_party := permissions[input.resource.action].companyParty
+# Double policy variable assignment is Rego's way of doing a logical OR
+pss_right_is_valid if action.pss_right == ""
+pss_right_is_valid if action.pss_right in principal.pss_rights
+
+required_company_party := action.companyParty
 company_party_is_valid if required_company_party == "*"
 company_party_is_valid if {
     required_company_party == input.resource.companyParties[i]
@@ -130,217 +165,217 @@ product_type_is_valid if {
 #
 # Backing data (static for a POC, will by externalized in a real-world scenario)
 #
-principals := {
-    "bob": {
-        "permissions": [
-			{
-                "role": "companyAdministrator",
-                "company": "EXN",
-                "subscriber": "CPL",
-                "locations": [
-                    "DVD",
-					"SAN",
-					"STL"
-                ],
-                "productTypes": [
-                    "GAS",
-					"JET"
-                ]
-            },
-            {
-                "role": "scheduler",
-                "company": "EXN",
-                "subscriber": "CPL",
-                "locations": [
-                    "*"
-                ],
-                "productTypes": [
-                    "*"
-                ]
-            }            
-        ],
-        "pss_rights": [
-            "pss_nomination_create"
-        ]
-    },
-	"alice": {
-		"permissions": [
-			{
-				"role": "inspector",
-				"company": "P66",
-				"subscriber": "KMO",
-				"locations": [
-					"DVD"
-				],
-				"productTypes": [
-					"GAS"
-				]
-			}           
-		],
-		"pss_rights": []
-	}
-}
+# principals := {
+#     "bob": {
+#         "permissions": [
+# 			{
+#                 "role": "companyAdministrator",
+#                 "company": "EXN",
+#                 "subscriber": "CPL",
+#                 "locations": [
+#                     "DVD",
+# 					"SAN",
+# 					"STL"
+#                 ],
+#                 "productTypes": [
+#                     "GAS",
+# 					"JET"
+#                 ]
+#             },
+#             {
+#                 "role": "scheduler",
+#                 "company": "EXN",
+#                 "subscriber": "CPL",
+#                 "locations": [
+#                     "*"
+#                 ],
+#                 "productTypes": [
+#                     "*"
+#                 ]
+#             }            
+#         ],
+#         "pss_rights": [
+#             "pss_nomination_create"
+#         ]
+#     },
+# 	"alice": {
+# 		"permissions": [
+# 			{
+# 				"role": "inspector",
+# 				"company": "P66",
+# 				"subscriber": "KMO",
+# 				"locations": [
+# 					"DVD"
+# 				],
+# 				"productTypes": [
+# 					"GAS"
+# 				]
+# 			}           
+# 		],
+# 		"pss_rights": []
+# 	}
+# }
 
-companies := {
-    "EXN": {
-        "permissions": [
-            {
-                "subscriber": "CPL",
-                "role": "scheduler",
-                "locations": [
-                    "DVD",
-                    "SAN"
-                ],
-                "productTypes": [
-                    "GAS",
-                    "JET"
-                ]
-            },
-            {
-                "subscriber": "CPL",
-                "role": "compayAdministrator",
-                "locations": [
-                    "DVD",
-                    "SAN"
-                ],
-                "productTypes": [
-                    "GAS",
-                    "JET"
-                ]
-            }
-        ]
-    },
-	"P66": {
-		"permissions": [
-			{
-				"subscriber": "KMO",
-				"role": "inspector",
-				"locations": [
-					"DVD"
-				],
-				"productTypes": [
-					"GAS"
-				]
-			}
-		]
-	}
-}
+# companies := {
+#     "EXN": {
+#         "permissions": [
+#             {
+#                 "subscriber": "CPL",
+#                 "role": "scheduler",
+#                 "locations": [
+#                     "DVD",
+#                     "SAN"
+#                 ],
+#                 "productTypes": [
+#                     "GAS",
+#                     "JET"
+#                 ]
+#             },
+#             {
+#                 "subscriber": "CPL",
+#                 "role": "compayAdministrator",
+#                 "locations": [
+#                     "DVD",
+#                     "SAN"
+#                 ],
+#                 "productTypes": [
+#                     "GAS",
+#                     "JET"
+#                 ]
+#             }
+#         ]
+#     },
+# 	"P66": {
+# 		"permissions": [
+# 			{
+# 				"subscriber": "KMO",
+# 				"role": "inspector",
+# 				"locations": [
+# 					"DVD"
+# 				],
+# 				"productTypes": [
+# 					"GAS"
+# 				]
+# 			}
+# 		]
+# 	}
+# }
 
-permissions_by_role := {
-  "scheduler": {
-    "valid_actions": [
-      "nomination_create",
-      "nomination_edit",
-      "nomination_view",
-      "ticket_create",
-      "ticket_edit",
-      "ticket_view"
-    ]
-  },
-  "companyAdministrator": {
-    "valid_actions": [
-	  "nomination_subscriber_confirm",
-      "nomination_tankage_confirm",
-      "nomination_create",
-      "nomination_edit",
-      "nomination_view",
-      "ticket_create",
-      "ticket_edit",
-      "ticket_view"
-    ]
-  },
-  "pipelineEmployee": {
-    "valid_actions": [
-      "nomination_create",
-      "nomination_edit",
-      "nomination_view",
-      "ticket_create",
-      "ticket_edit",
-      "ticket_view"
-    ]
-  },
-  "inspector": {
-    "valid_actions": [
-      "nomination_view",
-      "ticket_view"
-    ]
-  }
-}
+# permissions_by_role := {
+#   "scheduler": {
+#     "valid_actions": [
+#       "nomination_create",
+#       "nomination_edit",
+#       "nomination_view",
+#       "ticket_create",
+#       "ticket_edit",
+#       "ticket_view"
+#     ]
+#   },
+#   "companyAdministrator": {
+#     "valid_actions": [
+# 	  "nomination_subscriber_confirm",
+#       "nomination_tankage_confirm",
+#       "nomination_create",
+#       "nomination_edit",
+#       "nomination_view",
+#       "ticket_create",
+#       "ticket_edit",
+#       "ticket_view"
+#     ]
+#   },
+#   "pipelineEmployee": {
+#     "valid_actions": [
+#       "nomination_create",
+#       "nomination_edit",
+#       "nomination_view",
+#       "ticket_create",
+#       "ticket_edit",
+#       "ticket_view"
+#     ]
+#   },
+#   "inspector": {
+#     "valid_actions": [
+#       "nomination_view",
+#       "ticket_view"
+#     ]
+#   }
+# }
 
-subscribers := {
-    "CPL": {
-        "permissions": [
-			"nomination_subscriber_confirm",
-            "nomination_tankage_confirm",
-            "nomination_create",
-            "nomination_edit",
-            "nomination_view",
-            "ticket_create",
-            "ticket_edit",
-            "ticket_view"
-        ]
-    },
-	"KMO": {
-		"permissions": [
-			"ticket_create",
-			"ticket_edit",
-			"ticket_view"
-		]
-	}
-}
+# subscribers := {
+#     "CPL": {
+#         "permissions": [
+# 			"nomination_subscriber_confirm",
+#             "nomination_tankage_confirm",
+#             "nomination_create",
+#             "nomination_edit",
+#             "nomination_view",
+#             "ticket_create",
+#             "ticket_edit",
+#             "ticket_view"
+#         ]
+#     },
+# 	"KMO": {
+# 		"permissions": [
+# 			"ticket_create",
+# 			"ticket_edit",
+# 			"ticket_view"
+# 		]
+# 	}
+# }
 
-permissions := {
-	"admin_add_application": {},
-    "nomination_create": {
-        "pss_right": "pss_nomination_create",
-        "companyParty": "shipper"
-    },
-    "nomination_edit": {
-        "pss_right": "",
-        "companyParty": "shipper"
-    },
-    "nomination_subscriber_confirm": {
-        "pss_right": "pss_nomination_subscriber_confirm",
-        "companyParty": "carrier"
-    },
-    "nomination_supCon_confirm": {
-        "pss_right": "",
-        "companyParty": "supCon"
-    },
-    "nomination_tankage_confirm": {
-        "pss_right": "",
-        "companyParty": "tankage"
-    },
-    "nomination_view": {
-        "pss_right": "",
-        "companyParty": "*"
-    },
-    "ticket_create": {
-        "pss_right": "",
-        "companyParty": "subscriber"
-    },
-    "ticket_edit": {
-        "pss_right": "",
-        "companyParty": "subscriber"
-    },
-    "ticket_view": {
-        "pss_right": "",
-        "companyParty": "*"
-    }
-}
+# permissions := {
+# 	"admin_add_application": {},
+#     "nomination_create": {
+#         "pss_right": "pss_nomination_create",
+#         "companyParty": "shipper"
+#     },
+#     "nomination_edit": {
+#         "pss_right": "",
+#         "companyParty": "shipper"
+#     },
+#     "nomination_subscriber_confirm": {
+#         "pss_right": "pss_nomination_subscriber_confirm",
+#         "companyParty": "carrier"
+#     },
+#     "nomination_supCon_confirm": {
+#         "pss_right": "",
+#         "companyParty": "supCon"
+#     },
+#     "nomination_tankage_confirm": {
+#         "pss_right": "",
+#         "companyParty": "tankage"
+#     },
+#     "nomination_view": {
+#         "pss_right": "",
+#         "companyParty": "*"
+#     },
+#     "ticket_create": {
+#         "pss_right": "",
+#         "companyParty": "subscriber"
+#     },
+#     "ticket_edit": {
+#         "pss_right": "",
+#         "companyParty": "subscriber"
+#     },
+#     "ticket_view": {
+#         "pss_right": "",
+#         "companyParty": "*"
+#     }
+# }
 
-permission_sets := {
-	"nominations": [
-		"nomination_create",
-		"nomination_edit",
-		"nomination_subscriber_confirm",
-		"nomination_supCon_confirm",
-		"nomination_tankage_confirm",
-		"nomination_view",
-	],
-	"tickets": [
-		"ticket_create",
-		"ticket_edit",
-		"ticket_view"
-	]
-}
+# permission_sets := {
+# 	"nominations": [
+# 		"nomination_create",
+# 		"nomination_edit",
+# 		"nomination_subscriber_confirm",
+# 		"nomination_supCon_confirm",
+# 		"nomination_tankage_confirm",
+# 		"nomination_view",
+# 	],
+# 	"tickets": [
+# 		"ticket_create",
+# 		"ticket_edit",
+# 		"ticket_view"
+# 	]
+# }
