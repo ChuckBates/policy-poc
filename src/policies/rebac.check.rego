@@ -79,32 +79,34 @@ principal := ds.object({
     "with_relation": true
 })
 
-user_permissions contains permission if {
-	some inherited_permission in inherited_permissions
-    role := ds.object({
-        "object_type": "role",
-        "object_id": inherited_permission.role,
-        "with_relation": true
-    })
-	some permission in role.actions
-	permission in subscriber_permissions
-}
+user_permissions := [principal.id]
 
-subscriber_permissions contains subscriber_permission if {
-    some input_subscriber in input.resource.subscribers
-    subscriber := ds.object({
-        "object_type": "subscriber",
-        "object_id": input_subscriber,
-        "with_relation": true
-    })
-	some subscriber_permission in subscriber.permissions
-}
+# user_permissions contains permission if {
+# 	some inherited_permission in inherited_permissions
+#     role := ds.object({
+#         "object_type": "role",
+#         "object_id": inherited_permission.role,
+#         "with_relation": true
+#     })
+# 	some permission in role.actions
+# 	permission in subscriber_permissions
+# }
 
-inherited_permissions contains permission if {
-	some permission in principal.user_permissions
-	permission.subscriber in input.resource.subscribers
-	permission.company in input.resource.companies
-}
+# subscriber_permissions contains subscriber_permission if {
+#     some input_subscriber in input.resource.subscribers
+#     subscriber := ds.object({
+#         "object_type": "subscriber",
+#         "object_id": input_subscriber,
+#         "with_relation": true
+#     })
+# 	some subscriber_permission in subscriber.permissions
+# }
+
+# inherited_permissions contains permission if {
+# 	some permission in principal.user_permissions
+# 	permission.subscriber in input.resource.subscribers
+# 	permission.company in input.resource.companies
+# }
 
 # inherited_companies contains company if {
 # 	some permission in inherited_permissions
