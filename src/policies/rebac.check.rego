@@ -17,6 +17,7 @@ default allow := false
 #
 # Policy enforcement
 #
+print("attemping authorization check")
 allow if {
     print("requestType: ", input.resource.requestType)
 	input.resource.requestType = "evaluate"
@@ -32,15 +33,19 @@ allow if {
 	pss_right_is_valid
 }
 
+print("attempting action_set check for nominations")
 nomination_action_set := ds.object({
     "object_type": "action_set",
     "object_id": "nominations"
 })
+print("nomination action_set: ", nomination_action_set)
 
+print("attempting action_set check for tickets")
 ticket_action_set := ds.object({
     "object_type": "action_set",
     "object_id": "tickets"
 })
+print("ticket action_set: ", ticket_action_set)
 
 allow if {
 	input.resource.requestType = "generate_query"
