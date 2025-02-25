@@ -31,8 +31,9 @@ allow if {
 	pss_right_is_valid
 }
 
-allow {"reason of deny: ", deny} if {
+allow if {
     count(deny[x]) > 0
+    {"reason of deny: ", deny}
 }
 
 deny[x] if {
