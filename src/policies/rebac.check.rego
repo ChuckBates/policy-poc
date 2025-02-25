@@ -33,18 +33,17 @@ allow if {
 
 nomination_action_set_relations := ds.object({
     "object_type": "action_set",
-    "object_id": "nominations"
+    "object_id": "nominations",
+    "with_relations": true
 }).relations
-nomination_action_set contains action if {
-    some relation in nomination_action_set_relations
-    relation.object_type == "action"
-    relation.object_id
-}
+nomination_action_set := [object_id | nomination_action_set_relations[i].object_type = "action"; object_id := nomination_action_set_relations[i].object_id]
 
-ticket_action_set := ds.object({
+ticket_action_set_relations := ds.object({
     "object_type": "action_set",
-    "object_id": "tickets"
-})
+    "object_id": "tickets",
+    "with_relations": true
+}).relations
+ticket_action_set := [object_id | ticket_action_set_relations[i].object_type = "action"; object_id := ticket_action_set_relations[i].object_id]
 
 allow if {
 	input.resource.requestType = "generate_query"
@@ -84,6 +83,8 @@ principal := ds.object({
     "object_id": input.resource.principal,
     "with_relations": true
 })
+principal_user_permissions := [object_id | principal.relations[i].object_type = "user_permission"; object_id := principal.relations[i].object_id]
+principal_pss_rights := [object_id | principal.relations[i].object_type = "pss_right"; object_id := principal.relations[i].object_id]
 
 user_permissions contains permission if {
 	some inherited_permission in inherited_permissions
@@ -92,7 +93,8 @@ user_permissions contains permission if {
         "object_id": inherited_permission.role,
         "with_relations": true
     })
-	some permission in role.actions
+    role_actions := [object_id | role.relations[i].object_type = "action"; object_id := role.relations[i].object_id]
+	some permission in role_actions
 	permission in subscriber_permissions
 }
 
@@ -103,11 +105,12 @@ subscriber_permissions contains subscriber_permission if {
         "object_id": input_subscriber,
         "with_relations": true
     })
-	some subscriber_permission in subscriber.permissions
+    subscriber_permissions := [object_id | subscriber.relations[i].object_type = "subscriber_permission"; object_id := subscriber.relations[i].object_id]
+	some subscriber_permission in subscriber_permissions
 }
 
 inherited_permissions contains permission if {
-	some permission in principal.user_permissions
+	some permission in principal_user_permissions
 	permission.subscriber in input.resource.subscribers
 	permission.company in input.resource.companies
 }
@@ -129,7 +132,9 @@ inherited_product_types contains productType if {
         "object_id": permission.company,
         "with_relations": true
     })
-	some company_permission in company.company_permissions
+    company_permissions := [object_id | company.relations[i].object_type = "company_permission"; object_id := company.relations[i].object_id]
+
+	some company_permission in company_permissions
     some subscriber in input.resource.subscribers
 	company_permission.subscriber = subscriber
 	some productType in company_permission.productTypes
@@ -142,7 +147,9 @@ inherited_locations contains location if {
         "object_id": permission.company,
         "with_relations": true
     })
-	some company_permission in company.company_permissions
+    company_permissions := [object_id | company.relations[i].object_type = "company_permission"; object_id := company.relations[i].object_id]
+
+	some company_permission in company_permissions
     some subscriber in input.resource.subscribers
 	company_permission.subscriber = subscriber
 	some location in company_permission.locations
@@ -153,15 +160,16 @@ action := ds.object({
     "object_id": input.resource.action,
     "with_relations": true
 })
+action_pss_right := action.properties.pss_right
+action_company_party := action.properties.companyParty
 
 # Double policy variable assignment is Rego's way of doing a logical OR
-pss_right_is_valid if action.pss_right == ""
-pss_right_is_valid if action.pss_right in principal.pss_rights
+pss_right_is_valid if action_pss_right == ""
+pss_right_is_valid if action_pss_right in principal_pss_rights
 
-required_company_party := action.companyParty
-company_party_is_valid if required_company_party == "*"
+company_party_is_valid if action_company_party == "*"
 company_party_is_valid if {
-    required_company_party == input.resource.companyParties[i]
+    action_company_party == input.resource.companyParties[i]
     input.resource.companies[i] in inherited_companies
 }
 
