@@ -80,8 +80,6 @@ principal := ds.object({
     "with_relation": true
 })
 
-user_permissions := ["nomination_create"]
-
 user_permissions contains permission if {
 	some inherited_permission in inherited_permissions
     role := ds.object({
