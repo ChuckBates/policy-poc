@@ -31,33 +31,33 @@ allow if {
 	pss_right_is_valid
 }
 
-allow = {"reason of deny: ", deny} {
-    count(deny) > 0
+allow {"reason of deny: ", deny} if {
+    count(deny[x]) > 0
 }
 
-deny[reason] {
+deny[x] if {
     not location_is_valid
-    reason := "location is not valid"
+    x := "location is not valid"
 }
 
-deny[reason] {
+deny[x] if {
     not product_type_is_valid
-    reason := "product type is not valid"
+    x := "product type is not valid"
 }
 
-deny[reason] {
+deny[x] if {
     not company_party_is_valid
-    reason := "company party is not valid"
+    x := "company party is not valid"
 }
 
-deny[reason] {
+deny[x] if {
     not pss_right_is_valid
-    reson := "pss right is not valid"
+    x := "pss right is not valid"
 }
 
-deny[reason] {
+deny[x] if {
     not (input.resource.action in user_permissions)
-    reason := "user does not have the required permissions"
+    x := "user does not have the required permissions"
 }
 
 nomination_action_set_relations := ds.object({
