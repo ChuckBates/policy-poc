@@ -31,10 +31,15 @@ allow if {
 	pss_right_is_valid
 }
 
-nomination_action_set := ds.object({
+nomination_action_set_relations := ds.object({
     "object_type": "action_set",
     "object_id": "nominations"
-})
+}).relations
+nomination_action_set contains action if {
+    some relation in nomination_action_set_relations
+    relation.object_type == "action"
+    relation.object_id
+}
 
 ticket_action_set := ds.object({
     "object_type": "action_set",
