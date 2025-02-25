@@ -33,7 +33,6 @@ allow if {
 
 allow if {
     count(deny[x]) > 0
-    {"reason of deny: ", deny}
 }
 
 deny[x] if {
