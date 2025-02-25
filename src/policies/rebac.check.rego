@@ -105,54 +105,107 @@ subscriber_permissions contains subscriber_permission if {
         "object_id": input_subscriber,
         "with_relations": true
     })
-    subscriber_permissions := [object_id | subscriber.relations[i].object_type = "subscriber_permission"; object_id := subscriber.relations[i].object_id]
-	some subscriber_permission in subscriber_permissions
+    subscriber_action_sets := [object_id | subscriber.relations[i].object_type = "action_set"; object_id := subscriber.relations[i].object_id]
+    some subscriber_action_set in subscriber_action_sets
+    action_set := ds.object({
+        "object_type": "action_set",
+        "object_id": subscriber_action_set,
+        "with_relations": true
+    })
+    actions := [object_id | action_set.relations[i].object_type = "action"; object_id := action_set.relations[i].object_id]
+    some subscriber_permission in actions
 }
 
-inherited_permissions contains permission if {
-	some permission in principal_user_permissions
-	permission.subscriber in input.resource.subscribers
-	permission.company in input.resource.companies
+inherited_permissions contains permission_id if {
+	some permission_name in principal_user_permissions
+    permission := ds.object({
+        "object_type": "user_permission",
+        "object_id": permission_name,
+        "with_relations": true
+    })
+    permission_subscriber := [object_id | permission.relations[i].object_type = "subscriber"; object_id := permission.relations[i].object_id]
+    permission_company := [object_id | permission.relations[i].object_type = "company"; object_id := permission.relations[i].object_id]
+	permission_subscriber in input.resource.subscribers
+	permission_subscriber in input.resource.companies
+    permission_id = permission.id
 }
 
 inherited_companies contains company if {
-	some permission in inherited_permissions
-	company = permission.company
+	some permission_id in inherited_permissions
+    permission := ds.object({
+        "object_type": "user_permission",
+        "object_id": permission_id,
+        "with_relations": true
+    })
+    permission_company := [object_id | permission.relations[i].object_type = "company"; object_id := permission.relations[i].object_id]
+	company = permission_company
 }
 
 inherited_subscribers contains subscriber if {
-	some permission in inherited_permissions
-	subscriber = permission.subscriber
+	some permission_id in inherited_permissions
+    permission := ds.object({
+        "object_type": "user_permission",
+        "object_id": permission_id,
+        "with_relations": true
+    })
+    permission_subscriber := [object_id | permission.relations[i].object_type = "subscriber"; object_id := permission.relations[i].object_id]
+	subscriber = permission_subscriber
 }
 
 inherited_product_types contains productType if {
-	some permission in inherited_permissions
+	some permission_id in inherited_permissions
+    permission := ds.object({
+        "object_type": "user_permission",
+        "object_id": permission_id,
+        "with_relations": true
+    })
+    permission_company := [object_id | permission.relations[i].object_type = "company"; object_id := permission.relations[i].object_id][0]
     company := ds.object({
         "object_type": "company",
-        "object_id": permission.company,
+        "object_id": permission_company,
         "with_relations": true
     })
     company_permissions := [object_id | company.relations[i].object_type = "company_permission"; object_id := company.relations[i].object_id]
 
-	some company_permission in company_permissions
+	some company_permission_id in company_permissions
     some subscriber in input.resource.subscribers
-	company_permission.subscriber = subscriber
-	some productType in company_permission.productTypes
+    company_permission := ds.object({
+        "object_type": "company_permission",
+        "object_id": company_permission_id,
+        "with_relations": true
+    })
+    company_permission_subscriber := [object_id | company_permission.relations[i].object_type = "subscriber"; object_id := company_permission.relations[i].object_id]
+	company_permission_subscriber = subscriber
+    company_permission_productTypes := [object_id | company_permission.relations[i].object_type = "product_type"; object_id := company_permission.relations[i].object_id]
+	some productType in company_permission_productTypes
 }
 
 inherited_locations contains location if {
-	some permission in inherited_permissions
+	some permission_id in inherited_permissions
+    permission := ds.object({
+        "object_type": "user_permission",
+        "object_id": permission_id,
+        "with_relations": true
+    })
+    permission_company := [object_id | permission.relations[i].object_type = "company"; object_id := permission.relations[i].object_id][0]
     company := ds.object({
         "object_type": "company",
-        "object_id": permission.company,
+        "object_id": permission_company,
         "with_relations": true
     })
     company_permissions := [object_id | company.relations[i].object_type = "company_permission"; object_id := company.relations[i].object_id]
 
-	some company_permission in company_permissions
+	some company_permission_id in company_permissions
     some subscriber in input.resource.subscribers
-	company_permission.subscriber = subscriber
-	some location in company_permission.locations
+    company_permission := ds.object({
+        "object_type": "company_permission",
+        "object_id": company_permission_id,
+        "with_relations": true
+    })
+    company_permission_subscriber := [object_id | company_permission.relations[i].object_type = "subscriber"; object_id := company_permission.relations[i].object_id]
+	company_permission_subscriber = subscriber
+    company_permission_locations := [object_id | company_permission.relations[i].object_type = "location"; object_id := company_permission.relations[i].object_id]
+	some location in company_permission_locations
 }
 
 action := ds.object({
@@ -173,13 +226,13 @@ company_party_is_valid if {
     input.resource.companies[i] in inherited_companies
 }
 
-location_is_valid if "*" in inherited_locations
+location_is_valid if "ALL" in inherited_locations
 location_is_valid if {
 	some location in input.resource.locations
     location in inherited_locations
 }
 
-product_type_is_valid if "*" in inherited_product_types
+product_type_is_valid if "ALL" in inherited_product_types
 product_type_is_valid if {
 	some productType in input.resource.productTypes
     productType in inherited_product_types
