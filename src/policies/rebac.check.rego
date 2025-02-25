@@ -77,7 +77,7 @@ allowedTickets[x] if {
 principal := ds.object({
     "object_type": "user",
     "object_id": input.resource.principal,
-    "with_relation": true
+    "with_relations": true
 })
 
 user_permissions contains permission if {
@@ -85,7 +85,7 @@ user_permissions contains permission if {
     role := ds.object({
         "object_type": "role",
         "object_id": inherited_permission.role,
-        "with_relation": true
+        "with_relations": true
     })
 	some permission in role.actions
 	permission in subscriber_permissions
@@ -96,7 +96,7 @@ subscriber_permissions contains subscriber_permission if {
     subscriber := ds.object({
         "object_type": "subscriber",
         "object_id": input_subscriber,
-        "with_relation": true
+        "with_relations": true
     })
 	some subscriber_permission in subscriber.permissions
 }
@@ -122,7 +122,7 @@ inherited_product_types contains productType if {
     company := ds.object({
         "object_type": "company",
         "object_id": permission.company,
-        "with_relation": true
+        "with_relations": true
     })
 	some company_permission in company.company_permissions
     some subscriber in input.resource.subscribers
@@ -135,7 +135,7 @@ inherited_locations contains location if {
     company := ds.object({
         "object_type": "company",
         "object_id": permission.company,
-        "with_relation": true
+        "with_relations": true
     })
 	some company_permission in company.company_permissions
     some subscriber in input.resource.subscribers
@@ -146,7 +146,7 @@ inherited_locations contains location if {
 action := ds.object({
     "object_type": "action",
     "object_id": input.resource.action,
-    "with_relation": true
+    "with_relations": true
 })
 
 # Double policy variable assignment is Rego's way of doing a logical OR
