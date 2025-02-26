@@ -29,7 +29,7 @@ allow if {
 	company_party_is_valid
     print("pss_right_is_valid: ", pss_right_is_valid)
 	pss_right_is_valid
-    count(deny[x]) > 0
+    count(deny) > 0
 }
 
 deny[reason] if {
