@@ -82,13 +82,13 @@ principal_user_permissions := [object_id | principal.relations[i].object_type = 
 principal_pss_rights := [object_id | principal.relations[i].object_type = "pss_right"; object_id := principal.relations[i].object_id]
 
 user_permissions contains permission if {
-	some inherited_permission in inherited_permissions
-    permission := ds.object({
+	some inherited_permission_id in inherited_permissions
+    inherited_permission := ds.object({
         "object_type": "user_permission",
-        "object_id": inherited_permission,
+        "object_id": inherited_permission_id,
         "with_relations": true
     })
-    permission_role := [object_id | permission.relations[i].object_type = "role"; object_id := permission.relations[i].object_id][0]
+    permission_role := [object_id | inherited_permission.relations[i].object_type = "role"; object_id := inherited_permission.relations[i].object_id][0]
     role := ds.object({
         "object_type": "role",
         "object_id": permission_role,
