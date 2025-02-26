@@ -26,49 +26,41 @@ allow if {
 	pss_right_is_valid
 }
 
-# nomination_action_set_relations := ds.object({
-#     "object_type": "action_set",
-#     "object_id": "nominations",
-#     "with_relations": true
-# }).relations
-# nomination_action_set := [object_id | nomination_action_set_relations[i].object_type = "action"; object_id := nomination_action_set_relations[i].object_id]
+nomination_action_set := retrieve_directory_object("action_set", "nominations")
+nomination_action_ids := get_object_relations_as_properties(nomination_action_set, "action")
 
-# ticket_action_set_relations := ds.object({
-#     "object_type": "action_set",
-#     "object_id": "tickets",
-#     "with_relations": true
-# }).relations
-# ticket_action_set := [object_id | ticket_action_set_relations[i].object_type = "action"; object_id := ticket_action_set_relations[i].object_id]
+ticket_action_set := retrieve_directory_object("action_set", "tickets")
+ticket_action_ids := get_object_relations_as_properties(ticket_action_set, "action")
 
-# allow if {
-# 	input.resource.requestType == "generate_query"
-# 	input.resource.action in nomination_action_set
-# 	input.resource.action in user_permissions 
-# 	pss_right_is_valid
-# 	allowedNominations[x]
-# }
+allow if {
+	input.resource.requestType == "generate_query"
+	input.resource.action in nomination_action_ids
+	input.resource.action in user_permitted_actions 
+	pss_right_is_valid
+	allowedNominations[x]
+}
 
-# allow  if {
-# 	input.resource.requestType == "generate_query"
-# 	input.resource.action in ticket_action_set
-# 	input.resource.action in user_permissions 
-# 	pss_right_is_valid
-# 	allowedTickets[x]
-# }
+allow  if {
+	input.resource.requestType == "generate_query"
+	input.resource.action in ticket_action_ids
+	input.resource.action in user_permitted_actions 
+	pss_right_is_valid
+	allowedTickets[x]
+}
 
-# allowedNominations[x] if {
-# 	data.nominations[x].location = inherited_locations[_]
-# 	data.nominations[x].productType = inherited_product_types[_]
-# 	data.nominations[x].company = inherited_companies[_]
-# 	data.nominations[x].subscriber = inherited_subscribers[_]
-# }
+allowedNominations[x] if {
+	data.nominations[x].location = inherited_locations[_]
+	data.nominations[x].productType = inherited_product_types[_]
+	data.nominations[x].company = inherited_companies[_]
+	data.nominations[x].subscriber = inherited_subscribers[_]
+}
 
-# allowedTickets[x] if {
-# 	data.tickets[x].location = inherited_locations[_]
-# 	data.tickets[x].productType = inherited_product_types[_]
-# 	data.tickets[x].company = inherited_companies[_]
-# 	data.tickets[x].subscriber = inherited_subscribers[_]
-# }
+allowedTickets[x] if {
+	data.tickets[x].location = inherited_locations[_]
+	data.tickets[x].productType = inherited_product_types[_]
+	data.tickets[x].company = inherited_companies[_]
+	data.tickets[x].subscriber = inherited_subscribers[_]
+}
 
 #
 # Policy rules and variables
@@ -76,7 +68,6 @@ allow if {
 principal := retrieve_directory_object("user", input.resource.principal)
 principal_user_permission_ids := get_object_relations_as_properties(principal, "user_permission")
 principal_user_pss_rights := get_object_relations_as_properties(principal, "pss_right")
-# principal_pss_rights := [object_id | principal.relations[i].object_type = "pss_right"; object_id := principal.relations[i].object_id]
 
 user_permitted_actions contains action if {
 	some inherited_permission_id in inherited_permissions
@@ -127,16 +118,12 @@ inherited_companies contains company if {
 	company = inherited_permission_company_ids[0]
 }
 
-# inherited_subscribers contains subscriber if {
-# 	some permission_id in inherited_permissions
-#     permission := ds.object({
-#         "object_type": "user_permission",
-#         "object_id": permission_id,
-#         "with_relations": true
-#     })
-#     permission_subscriber := [object_id | permission.relations[i].object_type = "subscriber"; object_id := permission.relations[i].object_id][0]
-# 	subscriber = permission_subscriber
-# }
+inherited_subscribers contains subscriber if {
+	some inherited_permission_id in inherited_permissions
+    inherited_permission := retrieve_directory_object("user_permission", inherited_permission_id)
+    inherited_permission_subscriber_ids := get_object_relations_as_properties(inherited_permission, "subscriber")
+	subscriber = inherited_permission_subscriber_ids[0]
+}
 
 inherited_product_types contains productType if {
 	some inheritied_permission_id in inherited_permissions
