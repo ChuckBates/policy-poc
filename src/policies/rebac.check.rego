@@ -18,6 +18,7 @@ default allow := false
 # Policy enforcement
 #
 allow if {
+    count(deny) > 0
 	input.resource.requestType = "evaluate"
     print("user_permissions: ", user_permissions)
 	input.resource.action in user_permissions
@@ -29,7 +30,6 @@ allow if {
 	company_party_is_valid
     print("pss_right_is_valid: ", pss_right_is_valid)
 	pss_right_is_valid
-    count(deny) > 0
 }
 
 deny[reason] if {
