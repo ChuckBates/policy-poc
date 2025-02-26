@@ -18,37 +18,12 @@ default allow := false
 # Policy enforcement
 #
 allow if {
-	input.resource.requestType = "evaluate"
+	input.resource.requestType == "evaluate"
 	input.resource.action in user_permissions
 	location_is_valid
 	product_type_is_valid
 	company_party_is_valid
 	pss_right_is_valid
-}
-
-deny[reason] if {
-    not location_is_valid
-    reason := "location is not valid"
-}
-
-deny[reason] if {
-    not product_type_is_valid
-    reason := "product type is not valid"
-}
-
-deny[reason] if {
-    not company_party_is_valid
-    reason := "company party is not valid"
-}
-
-deny[reason] if {
-    not pss_right_is_valid
-    reason := "pss right is not valid"
-}
-
-deny[reason] if {
-    not (input.resource.action in user_permissions)
-    reason := "user does not have the required permissions"
 }
 
 nomination_action_set_relations := ds.object({
@@ -66,7 +41,7 @@ ticket_action_set_relations := ds.object({
 ticket_action_set := [object_id | ticket_action_set_relations[i].object_type = "action"; object_id := ticket_action_set_relations[i].object_id]
 
 allow if {
-	input.resource.requestType = "generate_query"
+	input.resource.requestType == "generate_query"
 	input.resource.action in nomination_action_set
 	input.resource.action in user_permissions 
 	pss_right_is_valid
@@ -74,7 +49,7 @@ allow if {
 }
 
 allow  if {
-	input.resource.requestType = "generate_query"
+	input.resource.requestType == "generate_query"
 	input.resource.action in ticket_action_set
 	input.resource.action in user_permissions 
 	pss_right_is_valid
@@ -108,9 +83,15 @@ principal_pss_rights := [object_id | principal.relations[i].object_type = "pss_r
 
 user_permissions contains permission if {
 	some inherited_permission in inherited_permissions
+    permission := ds.object({
+        "object_type": "user_permission",
+        "object_id": inherited_permission,
+        "with_relations": true
+    })
+    permission_role := [object_id | permission.relations[i].object_type = "role"; object_id := permission.relations[i].object_id][0]
     role := ds.object({
         "object_type": "role",
-        "object_id": inherited_permission.role,
+        "object_id": permission_role,
         "with_relations": true
     })
     role_actions := [object_id | role.relations[i].object_type = "action"; object_id := role.relations[i].object_id]
@@ -143,8 +124,8 @@ inherited_permissions contains permission_id if {
         "object_id": permission_name,
         "with_relations": true
     })
-    permission_subscriber := [object_id | permission.relations[i].object_type = "subscriber"; object_id := permission.relations[i].object_id]
-    permission_company := [object_id | permission.relations[i].object_type = "company"; object_id := permission.relations[i].object_id]
+    permission_subscriber := [object_id | permission.relations[i].object_type = "subscriber"; object_id := permission.relations[i].object_id][0]
+    permission_company := [object_id | permission.relations[i].object_type = "company"; object_id := permission.relations[i].object_id][0]
 	permission_subscriber in input.resource.subscribers
 	permission_subscriber in input.resource.companies
     permission_id = permission.id
@@ -157,7 +138,7 @@ inherited_companies contains company if {
         "object_id": permission_id,
         "with_relations": true
     })
-    permission_company := [object_id | permission.relations[i].object_type = "company"; object_id := permission.relations[i].object_id]
+    permission_company := [object_id | permission.relations[i].object_type = "company"; object_id := permission.relations[i].object_id][0]
 	company = permission_company
 }
 
@@ -168,7 +149,7 @@ inherited_subscribers contains subscriber if {
         "object_id": permission_id,
         "with_relations": true
     })
-    permission_subscriber := [object_id | permission.relations[i].object_type = "subscriber"; object_id := permission.relations[i].object_id]
+    permission_subscriber := [object_id | permission.relations[i].object_type = "subscriber"; object_id := permission.relations[i].object_id][0]
 	subscriber = permission_subscriber
 }
 
