@@ -20,55 +20,55 @@ default allow := false
 allow if {
 	input.resource.requestType == "evaluate"
 	input.resource.action in user_permissions
-	location_is_valid
-	product_type_is_valid
-	company_party_is_valid
-	pss_right_is_valid
+	# location_is_valid
+	# product_type_is_valid
+	# company_party_is_valid
+	# pss_right_is_valid
 }
 
-nomination_action_set_relations := ds.object({
-    "object_type": "action_set",
-    "object_id": "nominations",
-    "with_relations": true
-}).relations
-nomination_action_set := [object_id | nomination_action_set_relations[i].object_type = "action"; object_id := nomination_action_set_relations[i].object_id]
+# nomination_action_set_relations := ds.object({
+#     "object_type": "action_set",
+#     "object_id": "nominations",
+#     "with_relations": true
+# }).relations
+# nomination_action_set := [object_id | nomination_action_set_relations[i].object_type = "action"; object_id := nomination_action_set_relations[i].object_id]
 
-ticket_action_set_relations := ds.object({
-    "object_type": "action_set",
-    "object_id": "tickets",
-    "with_relations": true
-}).relations
-ticket_action_set := [object_id | ticket_action_set_relations[i].object_type = "action"; object_id := ticket_action_set_relations[i].object_id]
+# ticket_action_set_relations := ds.object({
+#     "object_type": "action_set",
+#     "object_id": "tickets",
+#     "with_relations": true
+# }).relations
+# ticket_action_set := [object_id | ticket_action_set_relations[i].object_type = "action"; object_id := ticket_action_set_relations[i].object_id]
 
-allow if {
-	input.resource.requestType == "generate_query"
-	input.resource.action in nomination_action_set
-	input.resource.action in user_permissions 
-	pss_right_is_valid
-	allowedNominations[x]
-}
+# allow if {
+# 	input.resource.requestType == "generate_query"
+# 	input.resource.action in nomination_action_set
+# 	input.resource.action in user_permissions 
+# 	pss_right_is_valid
+# 	allowedNominations[x]
+# }
 
-allow  if {
-	input.resource.requestType == "generate_query"
-	input.resource.action in ticket_action_set
-	input.resource.action in user_permissions 
-	pss_right_is_valid
-	allowedTickets[x]
-}
+# allow  if {
+# 	input.resource.requestType == "generate_query"
+# 	input.resource.action in ticket_action_set
+# 	input.resource.action in user_permissions 
+# 	pss_right_is_valid
+# 	allowedTickets[x]
+# }
 
-allowedNominations[x] if {
-	data.nominations[x].location = inherited_locations[_]
-	data.nominations[x].productType = inherited_product_types[_]
-	data.nominations[x].company = inherited_companies[_]
-	data.nominations[x].subscriber = inherited_subscribers[_]
-}
+# allowedNominations[x] if {
+# 	data.nominations[x].location = inherited_locations[_]
+# 	data.nominations[x].productType = inherited_product_types[_]
+# 	data.nominations[x].company = inherited_companies[_]
+# 	data.nominations[x].subscriber = inherited_subscribers[_]
+# }
 
-allowedTickets[x] if {
-	data.tickets[x].location = inherited_locations[_]
-	data.tickets[x].productType = inherited_product_types[_]
-	data.tickets[x].company = inherited_companies[_]
-	data.tickets[x].subscriber = inherited_subscribers[_]
-}
+# allowedTickets[x] if {
+# 	data.tickets[x].location = inherited_locations[_]
+# 	data.tickets[x].productType = inherited_product_types[_]
+# 	data.tickets[x].company = inherited_companies[_]
+# 	data.tickets[x].subscriber = inherited_subscribers[_]
+# }
 
 #
 # Policy rules and variables
@@ -79,7 +79,7 @@ principal := ds.object({
     "with_relations": true
 })
 principal_user_permissions := [object_id | principal.relations[i].object_type = "user_permission"; object_id := principal.relations[i].object_id]
-principal_pss_rights := [object_id | principal.relations[i].object_type = "pss_right"; object_id := principal.relations[i].object_id]
+# principal_pss_rights := [object_id | principal.relations[i].object_type = "pss_right"; object_id := principal.relations[i].object_id]
 
 user_permissions contains permission if {
 	some inherited_permission_id in inherited_permissions
@@ -131,113 +131,113 @@ inherited_permissions contains permission_id if {
     permission_id = permission.id
 }
 
-inherited_companies contains company if {
-	some permission_id in inherited_permissions
-    permission := ds.object({
-        "object_type": "user_permission",
-        "object_id": permission_id,
-        "with_relations": true
-    })
-    permission_company := [object_id | permission.relations[i].object_type = "company"; object_id := permission.relations[i].object_id][0]
-	company = permission_company
-}
+# inherited_companies contains company if {
+# 	some permission_id in inherited_permissions
+#     permission := ds.object({
+#         "object_type": "user_permission",
+#         "object_id": permission_id,
+#         "with_relations": true
+#     })
+#     permission_company := [object_id | permission.relations[i].object_type = "company"; object_id := permission.relations[i].object_id][0]
+# 	company = permission_company
+# }
 
-inherited_subscribers contains subscriber if {
-	some permission_id in inherited_permissions
-    permission := ds.object({
-        "object_type": "user_permission",
-        "object_id": permission_id,
-        "with_relations": true
-    })
-    permission_subscriber := [object_id | permission.relations[i].object_type = "subscriber"; object_id := permission.relations[i].object_id][0]
-	subscriber = permission_subscriber
-}
+# inherited_subscribers contains subscriber if {
+# 	some permission_id in inherited_permissions
+#     permission := ds.object({
+#         "object_type": "user_permission",
+#         "object_id": permission_id,
+#         "with_relations": true
+#     })
+#     permission_subscriber := [object_id | permission.relations[i].object_type = "subscriber"; object_id := permission.relations[i].object_id][0]
+# 	subscriber = permission_subscriber
+# }
 
-inherited_product_types contains productType if {
-	some permission_id in inherited_permissions
-    permission := ds.object({
-        "object_type": "user_permission",
-        "object_id": permission_id,
-        "with_relations": true
-    })
-    permission_company := [object_id | permission.relations[i].object_type = "company"; object_id := permission.relations[i].object_id][0]
-    company := ds.object({
-        "object_type": "company",
-        "object_id": permission_company,
-        "with_relations": true
-    })
-    company_permissions := [object_id | company.relations[i].object_type = "company_permission"; object_id := company.relations[i].object_id]
+# inherited_product_types contains productType if {
+# 	some permission_id in inherited_permissions
+#     permission := ds.object({
+#         "object_type": "user_permission",
+#         "object_id": permission_id,
+#         "with_relations": true
+#     })
+#     permission_company := [object_id | permission.relations[i].object_type = "company"; object_id := permission.relations[i].object_id][0]
+#     company := ds.object({
+#         "object_type": "company",
+#         "object_id": permission_company,
+#         "with_relations": true
+#     })
+#     company_permissions := [object_id | company.relations[i].object_type = "company_permission"; object_id := company.relations[i].object_id]
 
-	some company_permission_id in company_permissions
-    some subscriber in input.resource.subscribers
-    company_permission := ds.object({
-        "object_type": "company_permission",
-        "object_id": company_permission_id,
-        "with_relations": true
-    })
-    company_permission_subscriber := [object_id | company_permission.relations[i].object_type = "subscriber"; object_id := company_permission.relations[i].object_id]
-	company_permission_subscriber = subscriber
-    company_permission_productTypes := [object_id | company_permission.relations[i].object_type = "product_type"; object_id := company_permission.relations[i].object_id]
-	some productType in company_permission_productTypes
-}
+# 	some company_permission_id in company_permissions
+#     some subscriber in input.resource.subscribers
+#     company_permission := ds.object({
+#         "object_type": "company_permission",
+#         "object_id": company_permission_id,
+#         "with_relations": true
+#     })
+#     company_permission_subscriber := [object_id | company_permission.relations[i].object_type = "subscriber"; object_id := company_permission.relations[i].object_id]
+# 	company_permission_subscriber = subscriber
+#     company_permission_productTypes := [object_id | company_permission.relations[i].object_type = "product_type"; object_id := company_permission.relations[i].object_id]
+# 	some productType in company_permission_productTypes
+# }
 
-inherited_locations contains location if {
-	some permission_id in inherited_permissions
-    permission := ds.object({
-        "object_type": "user_permission",
-        "object_id": permission_id,
-        "with_relations": true
-    })
-    permission_company := [object_id | permission.relations[i].object_type = "company"; object_id := permission.relations[i].object_id][0]
-    company := ds.object({
-        "object_type": "company",
-        "object_id": permission_company,
-        "with_relations": true
-    })
-    company_permissions := [object_id | company.relations[i].object_type = "company_permission"; object_id := company.relations[i].object_id]
+# inherited_locations contains location if {
+# 	some permission_id in inherited_permissions
+#     permission := ds.object({
+#         "object_type": "user_permission",
+#         "object_id": permission_id,
+#         "with_relations": true
+#     })
+#     permission_company := [object_id | permission.relations[i].object_type = "company"; object_id := permission.relations[i].object_id][0]
+#     company := ds.object({
+#         "object_type": "company",
+#         "object_id": permission_company,
+#         "with_relations": true
+#     })
+#     company_permissions := [object_id | company.relations[i].object_type = "company_permission"; object_id := company.relations[i].object_id]
 
-	some company_permission_id in company_permissions
-    some subscriber in input.resource.subscribers
-    company_permission := ds.object({
-        "object_type": "company_permission",
-        "object_id": company_permission_id,
-        "with_relations": true
-    })
-    company_permission_subscriber := [object_id | company_permission.relations[i].object_type = "subscriber"; object_id := company_permission.relations[i].object_id]
-	company_permission_subscriber = subscriber
-    company_permission_locations := [object_id | company_permission.relations[i].object_type = "location"; object_id := company_permission.relations[i].object_id]
-	some location in company_permission_locations
-}
+# 	some company_permission_id in company_permissions
+#     some subscriber in input.resource.subscribers
+#     company_permission := ds.object({
+#         "object_type": "company_permission",
+#         "object_id": company_permission_id,
+#         "with_relations": true
+#     })
+#     company_permission_subscriber := [object_id | company_permission.relations[i].object_type = "subscriber"; object_id := company_permission.relations[i].object_id]
+# 	company_permission_subscriber = subscriber
+#     company_permission_locations := [object_id | company_permission.relations[i].object_type = "location"; object_id := company_permission.relations[i].object_id]
+# 	some location in company_permission_locations
+# }
 
-action := ds.object({
-    "object_type": "action",
-    "object_id": input.resource.action,
-    "with_relations": true
-})
-action_pss_right := action.properties.pss_right
-action_company_party := action.properties.companyParty
+# action := ds.object({
+#     "object_type": "action",
+#     "object_id": input.resource.action,
+#     "with_relations": true
+# })
+# action_pss_right := action.properties.pss_right
+# action_company_party := action.properties.companyParty
 
 # Double policy variable assignment is Rego's way of doing a logical OR
-pss_right_is_valid if action_pss_right == ""
-pss_right_is_valid if action_pss_right in principal_pss_rights
+# pss_right_is_valid if action_pss_right == ""
+# pss_right_is_valid if action_pss_right in principal_pss_rights
 
-company_party_is_valid if action_company_party == "*"
-company_party_is_valid if {
-    action_company_party == input.resource.companyParties[i]
-    input.resource.companies[i] in inherited_companies
-}
+# company_party_is_valid if action_company_party == "*"
+# company_party_is_valid if {
+#     action_company_party == input.resource.companyParties[i]
+#     input.resource.companies[i] in inherited_companies
+# }
 
-location_is_valid if "ALL" in inherited_locations
-location_is_valid if {
-	some location in input.resource.locations
-    location in inherited_locations
-}
+# location_is_valid if "ALL" in inherited_locations
+# location_is_valid if {
+# 	some location in input.resource.locations
+#     location in inherited_locations
+# }
 
-product_type_is_valid if "ALL" in inherited_product_types
-product_type_is_valid if {
-	some productType in input.resource.productTypes
-    productType in inherited_product_types
-}
+# product_type_is_valid if "ALL" in inherited_product_types
+# product_type_is_valid if {
+# 	some productType in input.resource.productTypes
+#     productType in inherited_product_types
+# }
 
 #
 # Backing data (static for a POC, will by externalized in a real-world scenario)
