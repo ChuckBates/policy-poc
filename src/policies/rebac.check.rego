@@ -18,41 +18,39 @@ default allow := false
 # Policy enforcement
 #
 allow if {
-    count(deny) > 0
 	input.resource.requestType = "evaluate"
-    print("user_permissions: ", user_permissions)
 	input.resource.action in user_permissions
-    print("location_is_valid: ", location_is_valid)
 	location_is_valid
-    print("product_type_is_valid: ", product_type_is_valid)
 	product_type_is_valid
-    print("company_party_is_valid: ", company_party_is_valid)
 	company_party_is_valid
-    print("pss_right_is_valid: ", pss_right_is_valid)
 	pss_right_is_valid
 }
 
-deny[reason] if {
+deny if {
+    count(denyReason) > 0
+}
+
+denyReason[reason] if {
     not location_is_valid
     reason := "location is not valid"
 }
 
-deny[reason] if {
+denyReason[reason] if {
     not product_type_is_valid
     reason := "product type is not valid"
 }
 
-deny[reason] if {
+denyReason[reason] if {
     not company_party_is_valid
     reason := "company party is not valid"
 }
 
-deny[reason] if {
+denyReason[reason] if {
     not pss_right_is_valid
     reason := "pss right is not valid"
 }
 
-deny[reason] if {
+denyReason[reason] if {
     not (input.resource.action in user_permissions)
     reason := "user does not have the required permissions"
 }
