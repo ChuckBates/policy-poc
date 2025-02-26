@@ -26,31 +26,27 @@ allow if {
 	pss_right_is_valid
 }
 
-deny if {
-    count(denyReason) > 0
-}
-
-denyReason[reason] if {
+deny[reason] if {
     not location_is_valid
     reason := "location is not valid"
 }
 
-denyReason[reason] if {
+deny[reason] if {
     not product_type_is_valid
     reason := "product type is not valid"
 }
 
-denyReason[reason] if {
+deny[reason] if {
     not company_party_is_valid
     reason := "company party is not valid"
 }
 
-denyReason[reason] if {
+deny[reason] if {
     not pss_right_is_valid
     reason := "pss right is not valid"
 }
 
-denyReason[reason] if {
+deny[reason] if {
     not (input.resource.action in user_permissions)
     reason := "user does not have the required permissions"
 }
