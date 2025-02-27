@@ -170,7 +170,7 @@ inherited_locations contains location if {
     # company_permission_subscriber_ids := get_object_relations_as_properties(company_permission, "subscriber")
     # company_permission_subscriber_ids[0] = subscriber
     inherited_permission_locations := get_object_relations_as_properties(inherited_permission, "location")
-	some location in company_permission_locations
+	some location in inherited_permission_locations
 }
 
 action := retrieve_directory_object("action", input.resource.action)
