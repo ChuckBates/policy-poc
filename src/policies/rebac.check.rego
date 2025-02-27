@@ -128,7 +128,7 @@ inherited_subscribers contains subscriber if {
 inherited_product_types contains productType if {
 	some inheritied_permission_id in inherited_permissions
     inherited_permission := retrieve_directory_object("user_permission", inheritied_permission_id)
-    inherited_permission_productTypes := get_object_relations_as_properties(inherited_permission, "productType")
+    inherited_permission_productTypes := get_object_relations_as_properties(inherited_permission, "product_type")
 	some productType in inherited_permission_productTypes
 }
 
