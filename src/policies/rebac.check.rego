@@ -128,47 +128,13 @@ inherited_subscribers contains subscriber if {
 inherited_product_types contains productType if {
 	some inheritied_permission_id in inherited_permissions
     inherited_permission := retrieve_directory_object("user_permission", inheritied_permission_id)
-    inherited_permission_company_ids := get_object_relations_as_properties(inherited_permission, "company")
-    inherited_permission_company := retrieve_directory_object("company", inherited_permission_company_ids[0])
-    company_permission_ids := get_object_relations_as_properties(inherited_permission_company, "company_permission")
-
-	some company_permission_id in company_permission_ids
-    some subscriber in input.resource.subscribers
-    company_permission := retrieve_directory_object("company_permission", company_permission_id)
-    company_permission_subscriber_ids := get_object_relations_as_properties(company_permission, "subscriber")
-    company_permission_subscriber_ids[0] = subscriber
-    company_permission_productTypes := get_object_relations_as_properties(company_permission, "product_type")
-	some productType in company_permission_productTypes
+    inherited_permission_productTypes := get_object_relations_as_properties(inherited_permission, "productType")
+	some productType in inherited_permission_productTypes
 }
-
-# inherited_locations contains location if {
-# 	some inheritied_permission_id in inherited_permissions
-#     inherited_permission := retrieve_directory_object("user_permission", inheritied_permission_id)
-#     inherited_permission_company_ids := get_object_relations_as_properties(inherited_permission, "company")
-#     inherited_permission_company := retrieve_directory_object("company", inherited_permission_company_ids[0])
-#     company_permission_ids := get_object_relations_as_properties(inherited_permission_company, "company_permission")
-
-# 	some company_permission_id in company_permission_ids
-#     some subscriber in input.resource.subscribers
-#     company_permission := retrieve_directory_object("company_permission", company_permission_id)
-#     company_permission_subscriber_ids := get_object_relations_as_properties(company_permission, "subscriber")
-#     company_permission_subscriber_ids[0] = subscriber
-#     company_permission_locations := get_object_relations_as_properties(company_permission, "location")
-# 	some location in company_permission_locations
-# }
 
 inherited_locations contains location if {
 	some inheritied_permission_id in inherited_permissions
     inherited_permission := retrieve_directory_object("user_permission", inheritied_permission_id)
-    # inherited_permission_company_ids := get_object_relations_as_properties(inherited_permission, "company")
-    # inherited_permission_company := retrieve_directory_object("company", inherited_permission_company_ids[0])
-    # company_permission_ids := get_object_relations_as_properties(inherited_permission_company, "company_permission")
-
-	# some company_permission_id in company_permission_ids
-    # some subscriber in input.resource.subscribers
-    # company_permission := retrieve_directory_object("company_permission", company_permission_id)
-    # company_permission_subscriber_ids := get_object_relations_as_properties(company_permission, "subscriber")
-    # company_permission_subscriber_ids[0] = subscriber
     inherited_permission_locations := get_object_relations_as_properties(inherited_permission, "location")
 	some location in inherited_permission_locations
 }
